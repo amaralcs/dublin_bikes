@@ -110,7 +110,7 @@ df$weekday <- weekdays(df$last_update, abbreviate = TRUE)
 
 # Creates a df calculating total check in/out per day
 day_frame <- df %>%
-  select(number, last_update, weekday, check_in, run_check_in, check_out, run_check_out) %>%
+  select(number, last_update, weekday, check_in, check_out) %>%
   mutate(
     year = year(last_update),
     month = month(last_update),
@@ -123,4 +123,55 @@ day_frame <- df %>%
     tot_check_out = sum(check_out)
   )
 
-################################# Analysis ##########################################
+# Rename columns
+df <- df %>%
+  rename(
+    Number = number,
+    Name = name,
+    Address = address,
+    Bike_stands = bike_stands,
+    Available_stands = available_bike_stands,
+    Last_update = last_update,
+    Prev_period_diff = prev_period_diff,
+    Check_in = check_in,
+    Check_out = check_out,
+    Weekday = weekday
+  )
+day_frame <- day_frame %>%
+  rename(
+    Number = number,
+    Date = date, 
+    Weekday = weekday,
+    Tot_check_in = tot_check_in,
+    Tot_check_out = tot_check_out
+  )
+
+# Write output to excel file so code doesn't have to be re-run
+write_rds(df, "db_all_data.rds")
+write_rds(day_frame, "db_date_info.rds")
+
+################################# Exploratory Analysis #####################################
+library(ggmap)
+
+# Change working directory - change appropriately to where rds files are
+setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/data_dump")
+
+# Read previously processed data
+df <- as.tibble(read_rds("db_all_data.rds"))
+day_frame <- as.tibble(read_rds("db_date_info.rds"))
+
+# Read in geospatial data for stations 
+geo <- as.tibble(read_csv("db_geo.csv"))
+
+# Add geospatial info to previous data frames
+df <- geo %>%
+  select(-Name, -Address) %>%
+  right_join(df, by = "Number")
+
+dub_map <- qmap(location = "dublin", zoom = 13)
+
+dub_map + 
+  geom_point(
+    aes(x = Longitude, y = Latitude),
+    data = df
+  )
