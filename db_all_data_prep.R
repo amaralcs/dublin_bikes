@@ -1,7 +1,5 @@
 library(tidyverse)
 library(lubridate)
-library(ggmap)
-library(stringr)
 
 # Analysis for all stations
 
@@ -70,9 +68,24 @@ file_names <- file_names[-1]
 # Read all files into data frame
 df <- do.call(rbind, lapply(file_names, read_csv))
 
+# Separate Duplicates
+dup <- duplicated(df)
+dup <- df %>%
+  mutate(duplicate = dup) %>%
+  filter(dup == TRUE)
+
+# Save duplicates for their own analysis
+write_rds(
+  dup,
+  "C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/saved_data_frames/duplicate_data.rds"
+)
+
+df %>% filter(is.na(bike_stands))
+
 # Remove duplicate columns (noted especially station 16 has duplicates)
 df <- distinct(df)
 
+  
 # Calculate difference in number of bikes between periods
 df <- df %>%
   # Convert POSIXct to date and split into each col
@@ -136,25 +149,11 @@ df <- df %>%
     Check_out = check_out
   )
 
-# Write output to excel file so code doesn't have to be re-run
+# Add factor level information to weekdays
+days_level <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+df <- df %>%
+  mutate(Weekday = factor(Weekday, levels = days_level))
+
+# Write output to rds file so code doesn't have to be re-run
 setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/saved_data_frames")
 write_rds(df, "db_all_data.rds")
-
-################################# Exploratory Analysis #####################################
-
-# Change working directory - change appropriately to where rds files are
-setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/saved_data_frames")
-
-# Read previously processed data
-df <- as.tibble(read_rds("db_all_data.rds"))
-day_frame <- as.tibble(read_rds("db_date_info.rds"))
-
-# Read in geospatial data for stations 
-geo <- as.tibble(read_csv("db_geo.csv"))
-
-# Add geospatial info to previous data frames
-df <- geo %>%
-  select(-Name, -Address) %>%
-  right_join(df, by = "Number")
-
-  

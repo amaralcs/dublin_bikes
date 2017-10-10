@@ -1,5 +1,7 @@
 library(tidyverse)
 library(lubridate)
+library(ggmap)
+library(stringr)
 
 # Analysis for a single station
  
@@ -55,6 +57,7 @@ run_sum <- function(df, col){
 }
 
 ############################ Initial data Prepation##################################
+
 # Change working directory - change appropriately to where csv files are
 setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/data_dump")
 
@@ -112,15 +115,6 @@ df <- df %>%
     check_out = sum(check_out)
   ) %>%
   ungroup()
-  
-
-# Calculate running sum for check_in/out
-#df$run_check_in <- run_sum(df$check_in)
-#df$run_check_out <- run_sum(df$check_out)
-
-# Create update start/finish columns
-#df$last_update_start <- df$last_update
-#df$last_update_end <- lead(df$last_update) # note last row will be NA
 
 # Rename columns
 df <- df %>%
@@ -145,8 +139,7 @@ df <- df %>%
 write_rds(df, "db_single_station_data.rds")
 
 ################################# Exploratory Analysis #####################################
-library(ggmap)
-library(stringr)
+
 
 # Read in geospatial data for stations 
 geo <- as.tibble(read_csv("db_geo.csv"))
@@ -157,7 +150,7 @@ setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/data_dump")
 # Read previously processed data
 df <- as.tibble(read_rds("db_single_station_data.rds"))
 
-## Plot check-ins ##
+################################# Exploratory plots #############################
 # Monday check ins plotted treating data in hourly min periods
 all_mondays_60m_in <- df %>%
   mutate(
@@ -282,19 +275,3 @@ all_mondays_10m_activity <- df %>%
   #facet_wrap(~month(Date, label = TRUE)) +
   ggtitle("Monday activity at Charlemont Place (10 min period)")
 all_mondays_10m_activity
-
-
-
-
-
-
-df %>%
-  filter(Weekday == "Mon") %>%
-  group_by(Name, month(Date), Hour = as.numeric(str_extract(Time, "^\\d{1,2}"))) %>%
-  summarise(
-    tot_check_ins = sum(Check_in),
-    avg_check_ins = mean(Check_in),
-    tot_check_outs = sum(Check_out),
-    avg_check_outs = mean(Check_out)
-  ) %>% View()
-
