@@ -133,7 +133,8 @@ df <- df %>%
     bike_stands = min(bike_stands),
     prev_period_diff = sum(prev_period_diff),
     check_in = sum(check_in),
-    check_out = sum(check_out)
+    check_out = sum(check_out),
+    available_stands = last(available_bike_stands)
   ) %>%
   ungroup()
 
@@ -146,7 +147,8 @@ df <- df %>%
     Bike_stands = bike_stands,
     Prev_period_diff = prev_period_diff,
     Check_in = check_in,
-    Check_out = check_out
+    Check_out = check_out,
+    Available_stands = available_stands
   )
 
 # Add factor level information to weekdays

@@ -259,7 +259,7 @@ station_name <- comp_df %>%
   as.vector()
 
 # Compare overall mean check in
-comp_df %>% 
+ov_in <- comp_df %>% 
   group_by(Name, Time) %>%
   summarise(
     mean_in = mean(Check_in)
@@ -276,7 +276,7 @@ comp_df %>%
   ggtitle("Overall check in comparison")
 
 # Compare overall mean check out
-comp_df %>% 
+ov_out <- comp_df %>% 
   group_by(Name, Time) %>%
   summarise(
     mean_out = mean(Check_out)
@@ -291,6 +291,79 @@ comp_df %>%
   ylab("Mean check out") +
   xlab("Time of day") +
   ggtitle("Overall check out comparison")
+
+# Compare overall mean check in across each day
+ov_in_day <- comp_df %>% 
+  group_by(Name, Time, Weekday) %>%
+  summarise(
+    mean_in = mean(Check_in)
+  ) %>%
+  ggplot(aes(hms(Time), mean_in, color = Name, group = Name)) +
+  geom_line(size = 1) +
+  facet_wrap(~ Weekday, nrow = 2) + 
+  scale_x_time() +
+  scale_color_discrete(
+    name = "Station",
+    labels = c("Charlemont", "Mountjoy")
+  ) +
+  ylab("Mean check in") +
+  xlab("Time of day") +
+  ggtitle("Overall check in comparison")
+ov_in_day
+
+# Compare overall mean check out across each day
+ov_out_day <- comp_df %>% 
+  group_by(Name, Time, Weekday) %>%
+  summarise(
+    mean_in = mean(Check_in)
+  ) %>%
+  ggplot(aes(hms(Time), mean_in, color = Name, group = Name)) +
+  geom_line(size = 1) +
+  facet_wrap(~ Weekday, nrow = 2) + 
+  scale_x_time() +
+  scale_color_discrete(
+    name = "Station",
+    labels = c("Charlemont", "Mountjoy")
+  ) +
+  ylab("Mean check out") +
+  xlab("Time of day") +
+  ggtitle("Overall check out comparison")
+ov_out_day
+
+# Investigating usage across Saturday and Sunday morning
+sat_sun <- comp_df %>%
+  mutate(
+    t_hour = as.numeric(str_extract(Time, "^\\d{1,2}")),
+    t_min = as.numeric(str_extract(Time, "\\d{2}\\b"))
+  ) %>%
+  filter(Weekday == "Sun" | Weekday == "Sat") %>%
+  filter(t_hour >5 & t_hour <10) %>%
+  group_by(Name, Time, Weekday)  %>%
+  summarise(
+    max_in = max(Check_in),
+    max_out = max(Check_out),
+    mean_in = mean(Check_in),
+    mean_out = mean(Check_out)
+  ) %>%
+  ggplot(aes(hms(Time))) +
+  scale_x_time() +
+  #geom_point(aes(y=max_in, fill=Name), size=2, shape=24) +
+  geom_line(aes(y=mean_in, colour=Name), size = 1)  +
+  #geom_point(aes(y=max_out, colour=Name), size=2, shape=25) +
+  geom_line(aes(y=mean_out, colour=Name), linetype= "dashed", size = 1)  +
+  scale_colour_discrete(
+    name = "Mean of station",
+    labels = c("Charlemont", "Mountjoy")
+  ) +
+  facet_wrap(~Weekday, nrow = 2)
+sat_sun
+
+setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/plots")
+ggsave("mjoy_charlemont_in.png", ov_in, width = 30, units = "cm")
+ggsave("mjoy_charlemont_out.png", ov_out, width = 30, units = "cm")
+ggsave("mjoy_charlemont_in_per_day.png", ov_in_day, width = 30, units = "cm")
+ggsave("mjoy_charlemont_out_per_day.png", ov_out_day, width = 30, units = "cm")
+ggsave("mjoy_charlemont_sat_sun.png", sat_sun, width = 30, units = "cm")
 
 "Overall conclusion is that Mountjoy has a more constant check out rate throughout the day
  while Charlemont has busier peaks.
