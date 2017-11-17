@@ -1,20 +1,31 @@
-"
-  ~~~~~~~~~~~~~~~~~~ OUTDATED FILE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+" 
   Author: Carlos Amaral
-  Date: 01/10/17
-  Last Modified: 17/11/17
+  Date: 17/11/2017
+  Last modified: 17/11/17
   Description:
-    This file contains initial exploration of the dataset. It does some initial parsing 
-    and plotting.
+    A new dataset was obtained, with hopefully more complete data. This files parses this data
+    as it is spread out across multiple JSON files. 
+    It also applies the same processing to the data as it was done in db_all_data_prep
+    so that all data is in the same format.
+
 "
 
 library(tidyverse)
+library(jsonlite)
 library(lubridate)
-library(ggmap)
-library(stringr)
 
-# Analysis for all stations
+################################ Read in JSON files #################################
+# Change working directory - change appropriately to where json files are
+setwd("./new_data")
+
+# Get all file names in the directory
+file_names <- dir()
+
+# Read in all json files, flattening where appropriate
+all_df <- do.call(rbind, lapply(file_names, fromJSON, flatten = TRUE))
+
+# Save it as rds, a format suitable for working in R
+write_rds(all_df, "../saved_data_frames/db_raw_new_data.rds")
 
 ################################ Support Functions ###################################
 
@@ -44,19 +55,20 @@ c_check_out <- function(diff){
   }
 }
 
+################################## Parse the data #################################
+df <- read_rds("./saved_data_frames/db_raw_new_data.rds")
 
-############################ Initial data Prepation##################################
+# Separate Duplicates
+dup <- duplicated(df)
+dup <- df %>%
+  mutate(duplicate = dup) %>%
+  filter(dup == TRUE)
 
-# Change working directory - change appropriately to where csv files are
-setwd("./data_dump")
-
-# Get all file names in the directory
-file_names <- dir()
-# Skip the first one as is problematic
-file_names <- file_names[-1]
-
-# Read all files into data frame
-df <- do.call(rbind, lapply(file_names, read_csv))
+# Save duplicates for their own analysis
+write_rds(
+  dup,
+  "./saved_data_frames/duplicate_data.rds"
+)
 
 # Remove duplicate columns (noted especially station 16 has duplicates)
 df <- distinct(df)
@@ -76,12 +88,12 @@ df <- df %>%
   # Standardise minutes i.e. group them in 10 minute slots and make new time
   mutate(
     Min = ifelse(Min < 10, "00",
-           ifelse(Min < 20, "10",
-            ifelse(Min < 30, "20",
-             ifelse(Min < 40, "30",
-              ifelse(Min < 50, "40",
-               ifelse(Min < 60, "50",
-                NA)))))
+                 ifelse(Min < 20, "10",
+                        ifelse(Min < 30, "20",
+                               ifelse(Min < 40, "30",
+                                      ifelse(Min < 50, "40",
+                                             ifelse(Min < 60, "50",
+                                                    NA)))))
     ),
     Date = ymd(paste(Year, Month, Day, sep = "-")),
     Time = paste(Hour, Min, Sec, sep = ":"),
@@ -108,7 +120,8 @@ df <- df %>%
     bike_stands = min(bike_stands),
     prev_period_diff = sum(prev_period_diff),
     check_in = sum(check_in),
-    check_out = sum(check_out)
+    check_out = sum(check_out),
+    available_stands = last(available_bike_stands)
   ) %>%
   ungroup()
 
@@ -121,28 +134,15 @@ df <- df %>%
     Bike_stands = bike_stands,
     Prev_period_diff = prev_period_diff,
     Check_in = check_in,
-    Check_out = check_out
+    Check_out = check_out,
+    Available_stands = available_stands
   )
 
-# Write output to excel file so code doesn't have to be re-run
-setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/saved_data_frames")
-write_rds(df, "db_all_data.rds")
+# Add factor level information to weekdays
+days_level <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+df <- df %>%
+  mutate(Weekday = factor(Weekday, levels = days_level))
 
-################################# Exploratory Analysis #####################################
+# Write output to rds file so code doesn't have to be re-run
+write_rds(df, "./saved_data_frames/db_all_data.rds")
 
-# Change working directory - change appropriately to where rds files are
-setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/saved_data_frames")
-
-# Read previously processed data
-df <- as.tibble(read_rds("db_all_data.rds"))
-day_frame <- as.tibble(read_rds("db_date_info.rds"))
-
-# Read in geospatial data for stations 
-geo <- as.tibble(read_csv("db_geo.csv"))
-
-# Add geospatial info to previous data frames
-df <- geo %>%
-  select(-Name, -Address) %>%
-  right_join(df, by = "Number")
-
-  

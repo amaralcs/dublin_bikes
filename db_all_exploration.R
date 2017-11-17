@@ -1,15 +1,31 @@
+"
+  Author: Carlos Amaral
+  Date: 4/10/17
+  Last modified:17/11/17
+  Description: 
+    Initial exploration of the dataset. 
+    There is analysis on the days the data was collected (note the missing days),
+    Variance of check ins/check outs at all stations
+    Comparison between Charlemont (top station overall) and Mountjoy Square (top station on the
+    north side of the city)
+    Analysis of usage of least used 10 stations
+"
+
 library(tidyverse)
 library(lubridate)
 library(stringr)
+
 ################################# Exploratory Analysis #####################################
 
 # Read previously processed data
-df <- as.tibble(read_rds("../saved_data_frames/db_all_data.rds"))
+df <- as.tibble(read_rds("./saved_data_frames/db_all_data.rds"))
 
 # Look at the missing dates
 df %>% 
-  group_by(month(Date), day(Date)) %>%
-  summarise(count = n()) %>% View()
+  group_by(y = year(Date), m = month(Date), d = day(Date)) %>%
+  summarise( n() ) %>%
+  arrange(y, m, d) %>%
+  View()
 # Note how days 8,9,10,11,12 of October are missing, plus there's a random entry for July
 
 # This is a random value found in the data, perhaps remove it as is shouldn't be here
@@ -18,9 +34,16 @@ df %>%
 
 # Filter out data for top 10 most used stations
 top_check_ins <- df %>%
-  group_by(Number) %>%
+  group_by(Number, Name) %>%
   summarise(tot_check_in = sum(Check_in)) %>%
   top_n(10, tot_check_in)
+# Note how there are two stations with number = 1 and no station 50
+
+df %>%
+  group_by(Name) %>%
+  summarise(tot_check_in = sum(Check_in)) %>%
+  top_n(10, tot_check_in) %>%
+  View()
 
 # Semi-join to obtain the full data
 top_check_ins <- semi_join(df, top_check_ins, by = "Number")
@@ -90,10 +113,10 @@ top_station %>%
     sd_out = sd(Check_out)
   ) %>%
   ggplot(aes(t_hour)) +
-  geom_point(aes(y=mean_in), colour = "green") +
-  geom_point(aes(y=mean_out), colour = "red") +
-  geom_point(aes(y=sd_in), colour = "blue") +
-  geom_point(aes(y=sd_out), colour = "magenta")
+  geom_line(aes(y=mean_in), colour = "green") +
+  geom_line(aes(y=mean_out), colour = "red") +
+  geom_line(aes(y=sd_in), colour = "blue") +
+  geom_line(aes(y=sd_out), colour = "magenta")
 
 # Analyse top variance for stations
 sd_10m <- df %>%
@@ -136,7 +159,7 @@ all_mondays_60m_in <- df %>%
   xlab("Hour") +
   ylab("Check ins") +
   #facet_wrap(~month(Date, label = TRUE)) +
-  ggtitle("Monday check ins at Charlemont Place (hourly period)")
+  ggtitle("Monday check ins (hourly period)")
 all_mondays_60m_in
 # This seems to indicate there is a high number of check ins at around 7am, 10am and 5pm
 
@@ -157,7 +180,7 @@ all_mondays_10m_in <- df %>%
   xlab("Hour") +
   ylab("Check ins") +
   #facet_wrap(~month(Date, label = TRUE)) +
-  ggtitle("Monday check ins at Charlemont Place (10 min period)")
+  ggtitle("Monday check ins (10 min period)")
 all_mondays_10m_in
 
 # Monday check outs plotted treating data in hourly min periods
@@ -177,7 +200,7 @@ all_mondays_60m_out <- df %>%
   xlab("Hour") +
   ylab("Check outs") +
   #facet_wrap(~month(Date, label = TRUE)) +
-  ggtitle("Monday check outs at Charlemont Place (hourly period)")
+  ggtitle("Monday check outs (hourly period)")
 all_mondays_60m_out
 # This seems to indicate there is a high number of check ins at around 7am, 10am and 5pm
 
@@ -198,7 +221,7 @@ all_mondays_10m_out <- df %>%
   xlab("Hour") +
   ylab("Check outs") +
   #facet_wrap(~month(Date, label = TRUE)) +
-  ggtitle("Monday check outs at Charlemont Place (10 min period)")
+  ggtitle("Monday check outs (10 min period)")
 all_mondays_10m_out
 
 # Monday activity plotted treating data in hourly min periods
@@ -219,7 +242,7 @@ all_mondays_60m_activity <- df %>%
   xlab("Hour") +
   ylab("Activity") +
   #facet_wrap(~month(Date, label = TRUE)) +
-  ggtitle("Monday activity at Charlemont Place (hourly period)")
+  ggtitle("Monday activity at (hourly period)")
 all_mondays_60m_activity
 # This seems to indicate there is a high number of check ins at around 7am, 10am and 5pm
 
@@ -241,7 +264,7 @@ all_mondays_10m_activity <- df %>%
   xlab("Hour") +
   ylab("Activity") +
   #facet_wrap(~month(Date, label = TRUE)) +
-  ggtitle("Monday activity at Charlemont Place (10 min period)")
+  ggtitle("Monday activity at (10 min period)")
 all_mondays_10m_activity
 
 
@@ -271,6 +294,7 @@ ov_in <- comp_df %>%
   ylab("Mean check in") +
   xlab("Time of day") +
   ggtitle("Overall check in comparison")
+ov_in
 
 # Compare overall mean check out
 ov_out <- comp_df %>% 
@@ -288,6 +312,7 @@ ov_out <- comp_df %>%
   ylab("Mean check out") +
   xlab("Time of day") +
   ggtitle("Overall check out comparison")
+ov_out
 
 # Compare overall mean check in across each day
 ov_in_day <- comp_df %>% 
@@ -355,7 +380,7 @@ sat_sun <- comp_df %>%
   facet_wrap(~Weekday, nrow = 2)
 sat_sun
 
-setwd("../plots")
+setwd("./plots")
 ggsave("mjoy_charlemont_in.png", ov_in, width = 30, units = "cm")
 ggsave("mjoy_charlemont_out.png", ov_out, width = 30, units = "cm")
 ggsave("mjoy_charlemont_in_per_day.png", ov_in_day, width = 30, units = "cm")
