@@ -10,6 +10,6 @@ R and Rstudio are the main tools used for this project, using a variety of packa
 
 ## Reference papers
 Some papers that inspired this work are listed below:
-  **http://www.sciencedirect.com/science/article/pii/S2352146516308778
-  **http://repository.cmu.edu/cgi/viewcontent.cgi?article=2490&context=tepper (we modeled our queing solution after this paper)
+  * http://www.sciencedirect.com/science/article/pii/S2352146516308778
+  * http://repository.cmu.edu/cgi/viewcontent.cgi?article=2490&context=tepper (we modeled our queing solution after this paper)
   
