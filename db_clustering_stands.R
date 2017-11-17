@@ -104,13 +104,23 @@ cl_exam <- plot(1:15, wss, type="b", xlab="Number of Clusters",
 fit_4 <- kmeans(full_kdf, 4)
 fit_5 <- kmeans(full_kdf, 5)
 
+full_kdf$cluster = factor(fit_4$cluster)
+centers = as.tibble(fit_4$centers)
 
+ggplot(data=full_kdf, aes(x=day, y='0:00:00', color=cluster )) + 
+  geom_point() +  
+  geom_point(data=centers, aes(x=day,y='0:00:00', color='Center')) +
+  geom_point(data=centers, aes(x=day,y='0:00:00', color='Center'), size=52, alpha=.3, legend=FALSE)
+
+ggplot(centers, aes_string(colnames(centers)[1], colnames(centers)[2])) + geom_point()
 " continue here"
 # Plot the different clusters and see the divide
 four_clusters <- plot(full_kdf, col = fit_4$cluster)
 five_clusters <- plot(full_kdf, col = fit_5$cluster)
 four_clusters
-
+fit_4
+ggplot(fit_4) +
+  geom_point(aes(cluster,totss))
 #ggsave(
 #  "four_clusters.png", 
 #  four_clusters,

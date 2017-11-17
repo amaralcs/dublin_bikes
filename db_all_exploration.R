@@ -3,11 +3,8 @@ library(lubridate)
 library(stringr)
 ################################# Exploratory Analysis #####################################
 
-# Change working directory - change appropriately to where rds files are
-setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/saved_data_frames")
-
 # Read previously processed data
-df <- as.tibble(read_rds("db_all_data.rds"))
+df <- as.tibble(read_rds("../saved_data_frames/db_all_data.rds"))
 
 # Look at the missing dates
 df %>% 
@@ -358,7 +355,7 @@ sat_sun <- comp_df %>%
   facet_wrap(~Weekday, nrow = 2)
 sat_sun
 
-setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/plots")
+setwd("../plots")
 ggsave("mjoy_charlemont_in.png", ov_in, width = 30, units = "cm")
 ggsave("mjoy_charlemont_out.png", ov_out, width = 30, units = "cm")
 ggsave("mjoy_charlemont_in_per_day.png", ov_in_day, width = 30, units = "cm")

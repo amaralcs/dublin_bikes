@@ -58,7 +58,7 @@ c_check_out <- function(diff){
 ############################ Initial data Prepation##################################
 
 # Change working directory - change appropriately to where csv files are
-setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/data_dump")
+setwd("./data_dump")
 
 # Get all file names in the directory
 file_names <- dir()
@@ -77,7 +77,7 @@ dup <- df %>%
 # Save duplicates for their own analysis
 write_rds(
   dup,
-  "C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/saved_data_frames/duplicate_data.rds"
+  "../saved_data_frames/duplicate_data.rds"
 )
 
 df %>% filter(is.na(bike_stands))
@@ -157,5 +157,4 @@ df <- df %>%
   mutate(Weekday = factor(Weekday, levels = days_level))
 
 # Write output to rds file so code doesn't have to be re-run
-setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/saved_data_frames")
-write_rds(df, "db_all_data.rds")
+write_rds(df, "../saved_data_frames/db_all_data.rds")
