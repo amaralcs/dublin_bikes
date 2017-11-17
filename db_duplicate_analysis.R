@@ -1,11 +1,17 @@
+"
+  Author: Carlos Amaral
+  Date: 22/10/17
+  Last modified: 17/11/17 
+  Description:
+    After the initial data preparation, I found that there were duplicate values in the data.
+    This file analyses what constitues these duplicates and try to pinpoint their source.
+"
+
 library(tidyverse)
 library(lubridate)
 
-# Change working directory - change appropriately to where rds files are
-setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/saved_data_frames")
-
 # Read previously processed data
-dup_df <- as.tibble(read_rds("duplicate_data.rds"))
+dup_df <- as.tibble(read_rds("./saved_data_frames/duplicate_data.rds"))
 
 # Calculate difference in number of bikes between periods
 dup_df <- dup_df %>%
@@ -23,6 +29,7 @@ dup_df <- dup_df %>%
     Weekday = weekdays(Date, abbreviate = TRUE)
   ) %>%  
   arrange(Year, Month, Day, Hour, Min, Sec)
+
 # Add factor level information to weekdays
 days_level <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 dup_df <- dup_df %>%

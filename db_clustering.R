@@ -1,15 +1,22 @@
+" 
+  Author: Carlos Amaral
+  Date: 10/10/17
+  Last modified: 17/11/17
+  Description:
+    This clustering is applied to the number of check in and check outs, with a small 
+    number of data points. For a different analysis, check db_clustering_stands
+"
+
 library(tidyverse)
 library(cluster)
 library(fpc)
+
 ########################## Charlemont Place investigation #######################
 "The first objective is to validate the clustering analysis done for Charlemont station.
   If I can replicate what was done previously I will know how to proceed with the kmeans"
 
-# Change working directory - change appropriately to where rds files are
-setwd("C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/saved_data_frames")
-
 # Read previously processed data
-df <- as.tibble(read_rds("db_all_data.rds"))
+df <- as.tibble(read_rds("./saved_data_frames/db_all_data.rds"))
 
 # Filter charlemont place
 df <- df %>% filter(Number == 5)
@@ -37,7 +44,7 @@ cl_exam <- plot(1:15, wss, type="b", xlab="Number of Clusters",
 ggsave(
   "cluster_analysis.png", 
   cl_exam,
-  path = "C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/plots"
+  path = "./plots"
   )
 
 "It seems that 4 is the ideal number of clusters, lets use that"
@@ -49,7 +56,7 @@ four_clusters <- plot(df[,c("Check_in", "Check_out")], col =fit$cluster)
 ggsave(
   "four_clusters.png", 
   four_clusters,
-  path = "C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/plots"
+  path = "./plots"
 )
 
 # Centroid Plot against 1st 2 discriminant functions
@@ -102,12 +109,12 @@ clust_out <- clust_df %>%
 ggsave(
   "mean_cl_in.png", 
   clust_in,
-  path = "C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/plots"
+  path = "./plots"
 )
 ggsave(
   "cmean_cl_out.png", 
   clust_out,
-  path = "C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/plots"
+  path = "./plots"
 )
 
 

@@ -1,6 +1,21 @@
+" 
+  Author: Carlos Amaral
+  Date: 
+  Description: 
+    This uses k-means clustering to cluster the data based on the number of available stands
+    at each station for each period of time. 
+    The tricky part is to get the dataset into the desired format. In particular, the name of
+    the columns at the desired format become the times of the day (i.e. 00:00:00, 00:10:00, etc..)
+  
+  Problems: 
+    plotting the clusters isn't working
+    file need tidying up      
+"
+
 library(tidyverse)
 library(cluster)
 library(fpc)
+
 ########################## Charlemont Place investigation #######################
 "The first objective is to validate the clustering analysis done for Charlemont station.
   If I can replicate what was done previously I will know how to proceed with the kmeans"
