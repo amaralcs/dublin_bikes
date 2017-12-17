@@ -1,235 +1,125 @@
 " 
   Author: Carlos Amaral
-  Date: 
-  Description: 
-    This uses k-means clustering to cluster the data based on the number of available stands
-    at each station for each period of time. 
-    The tricky part is to get the dataset into the desired format. In particular, the name of
-    the columns at the desired format become the times of the day (i.e. 00:00:00, 00:10:00, etc..)
-  
-  Problems: 
-    plotting the clusters isn't working
-    file need tidying up      
+Date: 
+Last Modified: 17/12/17
+Description: 
+This uses k-means clustering to cluster the data based on the number of available stands
+at each station for each period of time. 
+The tricky part is to get the dataset into the desired format. In particular, the name of
+the columns at the desired format become the times of the day (i.e. 00:00:00, 00:10:00, etc..)
 "
 
 library(tidyverse)
 library(cluster)
 library(fpc)
-
-########################## Charlemont Place investigation #######################
-"The first objective is to validate the clustering analysis done for Charlemont station.
-  If I can replicate what was done previously I will know how to proceed with the kmeans"
-
-# Change working directory - change appropriately to where rds files are
-setwd("./saved_data_frames")
-
+library(stringr)
+############################ Data re-shaping #############################
 # Read previously processed data
-df <- as.tibble(read_rds("db_all_data.rds"))
+df <- as.tibble(read_rds("./saved_data_frames/db_all_data.rds"))
 
-df %>%
-  filter(Number == 5) %>%
-  filter(Date == "2017-01-16") %>% View()
+# Filter unwanted data
+df <- df %>%
+  filter(Date >= "2016-10-14" & Date <= "2017-10-14")
 
-# Data preparation for charlemont
-ch_df <- df %>% 
-  filter(Number == 5) %>%
+prep_df <- df %>% 
   mutate(
     day = ifelse(Weekday == "Mon", 1,
-            ifelse(Weekday == "Tue", 2,
-              ifelse(Weekday == "Wed", 3,
-                ifelse(Weekday == "Thu", 4,
-                  ifelse(Weekday == "Fri", 5,
-                    ifelse(Weekday == "Sat", 6,
-                      ifelse(Weekday == "Sun", 7, -1)))))))
+                 ifelse(Weekday == "Tue", 2,
+                        ifelse(Weekday == "Wed", 3,
+                               ifelse(Weekday == "Thu", 4,
+                                      ifelse(Weekday == "Fri", 5,
+                                             ifelse(Weekday == "Sat", 6,
+                                                    ifelse(Weekday == "Sun", 7, -1))))))),
+    Time = str_replace_all(Time, ":", "_")
   ) %>%
   select(Number, day, Date,  Time, Available_stands) %>%
   group_by(Number, Date) %>%
   spread(key = Time, value = Available_stands) %>%
   ungroup() %>%
   select(-Number, -Date)
-
-# Look at the variance of the data, if they seem similar its ok, otherwise have to be scaled
-sapply(ch_df, var, na.rm = TRUE)
-"Looks like theres a lot of variance between the values, but I'll proceed with this anyway"
-
-# Create a datafram without null values for the analysis
-ch_df_complete <- ch_df[complete.cases(ch_df),]
-"I noticed there are very few complete cases for charlemont, I will try to find a better station"
-
-# Data preparation for all stations
-kdf <- df %>% 
-  mutate(
-    day = ifelse(Weekday == "Mon", 1,
-           ifelse(Weekday == "Tue", 2,
-            ifelse(Weekday == "Wed", 3,
-             ifelse(Weekday == "Thu", 4,
-              ifelse(Weekday == "Fri", 5,
-               ifelse(Weekday == "Sat", 6,
-                ifelse(Weekday == "Sun", 7, -1)))))))
-  ) %>%
-  select(Number, day, Date,  Time, Available_stands) %>%
-  group_by(Number, Date) %>%
-  spread(key = Time, value = Available_stands) %>%
-  ungroup()
-
-# Filter only complete cases
-full_kdf <- kdf[complete.cases(kdf),]
-
-full_kdf %>%
-  group_by(Number) %>%
-  summarise(count = n()) %>% View()
-"Seems like station 93 and 94 have the most complete dataset, 
-  however it is still very little data, I will continue with the all stations"
-full_kdf <- full_kdf %>% 
-  select(-Number, -Date)
-
-sapply(full_kdf, var)
-"Variance looks better now"
-
-# Scaling each measure by dividing it by the range of values
-#rge <- sapply(df_s[,c("Check_in", "Check_out", "Available_stands")], function(x) diff(range(x)))
-#df_s$Check_in <- df_s$Check_in / rge[1]
-#df_s$Check_out <- df_s$Check_out / rge[2]
-#df_s$Available_stands <- df_s$Available_stands / rge[3]
-#sapply(df_s[,c("Check_in", "Check_out", "Available_stands")], var)
-
-# Determine number of clusters
-"Fist step of the algorithm is to plot the weighted sum of squares find an 'elbow' 
-  on the plot. The elbow should give the ideal number of clusters"
-# First sum of squares
-n <- nrow(full_kdf)
-wss <- rep(0,15)
-wss[1] <- (n-1) * sum(sapply(full_kdf,var))
-# Subsequent values can be found using this loop, note '15' is arbitrary 
-for (i in 2:15)  wss[i] <- sum(kmeans(full_kdf, 
-                                     centers=i)$withinss)
-
-cl_exam <- plot(1:15, wss, type="b", xlab="Number of Clusters",
-     ylab="Within groups sum of squares")
-
-#ggsave(
-#  "cluster_analysis.png", 
-#  cl_exam,
-#  path = "C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/plots"
- # )
-
-#########################
-
-"It seems that 5 is the ideal number of clusters, lets use that"
-fit_4 <- kmeans(full_kdf, 4)
-fit_5 <- kmeans(full_kdf, 5)
-
-full_kdf$cluster = factor(fit_4$cluster)
-centers = as.tibble(fit_4$centers)
-
-ggplot(data=full_kdf, aes(x=day, y='0:00:00', color=cluster )) + 
-  geom_point() +  
-  geom_point(data=centers, aes(x=day,y='0:00:00', color='Center')) +
-  geom_point(data=centers, aes(x=day,y='0:00:00', color='Center'), size=52, alpha=.3, legend=FALSE)
-
-ggplot(centers, aes_string(colnames(centers)[1], colnames(centers)[2])) + geom_point()
-" continue here"
-# Plot the different clusters and see the divide
-four_clusters <- plot(full_kdf, col = fit_4$cluster)
-five_clusters <- plot(full_kdf, col = fit_5$cluster)
-four_clusters
-fit_4
-ggplot(fit_4) +
-  geom_point(aes(cluster,totss))
-#ggsave(
-#  "four_clusters.png", 
-#  four_clusters,
-#  path = "C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/plots"
-#)
-
-# Centroid Plot against 1st 2 discriminant functions
-plotcluster(df_s[,c("Check_in", "Check_out", "Available_stands")], fit$cluster)
-
-# Aggregate data
-aggregate(df_s[,c("Check_in", "Check_out", "Available_stands")], by = list(fit$cluster), FUN = mean)
-
-# Create a new data frame with the clustered data
-clust_df <- data.frame(df_s, fit$cluster)
-clust_df <-  as.tibble(clust_df) %>%
-  rename(Cluster = fit.cluster)
-
-clust_df$Check_in <- clust_df$Check_in * rge[1]
-clust_df$Check_out <- clust_df$Check_out * rge[2]
-clust_df$Available_stands <- clust_df$Available_stands * rge[3]
-
-# plot cluster means for check in over time
-clust_in <- clust_df %>%
-  mutate(
-    Cluster = as.factor(Cluster)
-  ) %>%
-  group_by(Number, Time, Cluster) %>%
-  mutate(
-    cluster_mean_in = mean(Check_in),
-    cluster_mean_out = mean(Check_out)
-  ) %>% 
-  ggplot(aes(Time, cluster_mean_in, colour = Cluster, group = Cluster )) +
-  geom_line(size = 1) +
-  scale_x_discrete() +
-  ylab("Mean centroid value") +
-  xlab("Time") +
-  ggtitle("Overall check in comparison") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-clust_in
-
-
-# plot cluster means over time
-clust_out <- clust_df %>%
-  mutate(
-    Cluster = as.factor(Cluster)
-  ) %>%
-  group_by(Number, Time, Cluster) %>%
-  mutate(
-    cluster_mean_in = mean(Check_in),
-    cluster_mean_out = mean(Check_out)
-  ) %>% 
-  ggplot(aes(Time, cluster_mean_out, colour = Cluster, group = Cluster )) +
-  geom_line(size = 1) +
-  scale_x_discrete() +
-  ylab("Mean centroid value") +
-  xlab("Time") +
-  ggtitle("Overall check out comparison") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-clust_out
-
-# plot cluster means over time
-clust_stands <- clust_df %>%
-  mutate(
-    Cluster = as.factor(Cluster)
-  ) %>%
-  group_by(Number, Time, Cluster) %>%
-  mutate(
-    cluster_mean_stand = mean(Available_stands)
-  ) %>% 
-  ggplot(aes(Time, cluster_mean_stand, colour = Cluster, group = Cluster )) +
-  geom_line(size = 1) +
-  scale_x_discrete() +
-  ylab("Mean centroid value") +
-  xlab("Time") +
-  ggtitle("Overall available stands comparison") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-clust_stands
-
-
-
-#ggsave(
-#  "mean_cl_in.png", 
-#  clust_in,
-#  path = "C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/plots"
-#)
-#ggsave(
-#  "cmean_cl_out.png", 
-#  clust_out,
-#  path = "C:/Users/Carlos/Documents/Dublin Bikes Project/dublin_bikes/plots"
-#)
-
-
-" From these plots I gather cluster 1: lots of ins and few outs
-                            cluster 2: few ins and few outs
-                            cluster 3: consistent outs and few ins
-                            cluster 4: few ins and lots of outs
+##################################### Data sanitisation ###############################
 "
+Due to the way the data is collected, there are periods of 10 minutes for which there is no entry
+To correct this, I implement the following code, which replaced NA entried by the previoues read
+or the following read in case the missing value is in the first row
+"
+
+fix_na <- function(column){
+  # Iterate through rows
+  for(i in 1:length(column)){
+    # Apply different result if it is first row
+    ifelse(
+      i == 1,
+      ifelse(is.na(column[i]), column[i] <- column[i+1], column[i] <- column[i]), 
+      ifelse(is.na(column[i]), column[i] <- column[i-1], column[i] <- column[i])
+    )
+  }
+  return(column)
+} 
+
+prep_df <- as.tibble(lapply(prep_df, fix_na))
+
+########################## Label Adjustment ###################
+"A series of operations to make the labels in the graph look pretty "
+# Create levels for the times of the day
+time_lvl_df <- df %>%
+  select(Time) %>%
+  distinct() %>%
+  mutate(
+    t_hour = as.numeric(str_extract(Time, "^\\d{1,2}")),
+    t_min = as.numeric(str_extract( str_extract(Time, ":\\d+:"), "\\d+") )
+  ) %>%
+  arrange(t_hour,t_min)
+
+# Vector with the levels for time i.e. order time from 00:00 to 23:50
+time_lvls <- time_lvl_df$Time
+
+# Support variables to capture time breaks for the plots
+time_breaks <- time_lvl_df %>%
+  filter(t_min == 0)
+time_breaks <- time_breaks$Time
+
+break_labels <- str_extract(time_breaks, "\\d+:\\d+")
+########################### k-means plot for prep df ################
+# k-means fit the data
+n <- nrow(prep_df)
+wss <- rep(0,15)
+wss[1] <- (n-1) * sum(sapply(prep_df,var))
+
+# Subsequent values can be found using this loop, note '15' is arbitrary 
+for (i in 2:15)  wss[i] <- sum(
+  kmeans(prep_df, centers=i)$withinss
+)
+
+# Plot wss for each number of clusters and use elbow method
+cl_exam <- plot(1:15, wss, type="b", xlab="Number of Clusters",
+                ylab="Within groups sum of squares")
+
+# 4-means clustering
+kfit <- kmeans(prep_df, centers = 4)
+
+# Change format of data for plotting
+k_centers <- as.tibble(kfit$centers) %>%
+  select(-day) %>%
+  mutate(cluster = as.factor(row_number())) %>%
+  gather(key = time, value = available_stands, -cluster) %>%
+  mutate( 
+    time = str_replace_all(time, "_", ":"),
+    time = factor(time, levels = time_lvls)
+  )
+
+## Plot the data
+k_centers %>% 
+  ggplot(aes(x = time, y = available_stands, colour = cluster)) +
+  geom_line() +   geom_point() +
+  scale_x_discrete(
+    breaks = time_breaks,
+    labels = break_labels
+  ) + 
+  #geom_point(data = centers, aes(Time, Available_stands), size = 10, alpha = 0.3) +
+  xlab("Hour of day") +
+  ylab("Available stands") +
+  ggtitle("Clustering for all stations")
+
+
+
