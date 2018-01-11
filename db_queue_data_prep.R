@@ -1,7 +1,15 @@
+"
+    Author: Carlos Amaral
+    Date: 12/11/17
+    Last modified:17/11/17
+    Description: 
+      This builds on the previous data preparation, but with a different format, more suited
+      to the variables needed for applying the queuing model
+"
+
 library(tidyverse)
 library(lubridate)
-
-" Prepares the data to be analyses by the queing theory model "
+library(stringr)
 
 ################################ Support Functions ###################################
 # Support function to calculate number of checked in bikes
@@ -31,16 +39,9 @@ c_check_out <- function(diff){
 }
 
 ############################ Initial data Prepation##################################
-# Change working directory - change appropriately to where csv files are
-setwd("../data_dump")
-
-# Get all file names in the directory
-file_names <- dir()
-# Skip the first one as is problematic
-file_names <- file_names[-1]
 
 # Read all files into data frame
-base_df <- do.call(rbind, lapply(file_names, read_csv))
+base_df <- read_rds("./saved_data_frames/db_raw_new_data.rds")
 
 # Remove duplicate columns (noted especially station 16 has duplicates)
 base_df <- distinct(base_df)
@@ -60,12 +61,12 @@ df <- base_df %>%
   # Standardise minutes i.e. group them in 10 minute slots and make new time
   mutate(
     min = ifelse(min < 10, "00",
-                 ifelse(min < 20, "10",
-                        ifelse(min < 30, "20",
-                               ifelse(min < 40, "30",
-                                      ifelse(min < 50, "40",
-                                             ifelse(min < 60, "50",
-                                                    NA)))))
+           ifelse(min < 20, "10",
+            ifelse(min < 30, "20",
+             ifelse(min < 40, "30",
+              ifelse(min < 50, "40",
+               ifelse(min < 60, "50",
+                      NA)))))
     ),
     date = ymd(paste(year, month, day, sep = "-")),
     time = paste(hour, min, sec, sep = ":"),
@@ -185,6 +186,17 @@ df %>%
     service_ia = mean(service_ia, na.rm = TRUE)
   ) %>% View()
 
+# Create a new data frame with only data that is ok (i.e. remove the missing dates from
+# 8th of october to 13th of october)
+# sort data frame by hour and minute
+filtered <- df %>%
+  mutate(
+    h = as.numeric(str_replace_all(str_extract(df$time, "\\d+:"), ":", "")),
+    m = as.numeric(str_replace_all(str_extract(df$time, ":\\d{2}:"), ":", ""))
+  ) %>%
+  group_by(number, name) %>%
+  arrange(number, date, h, m) %>%
+  filter( date >= "2016-10-14")
 
 # Save data frame
-write_rds(df, "../saved_data_frames/db_queue_data.rds")
+write_rds(filtered, "./saved_data_frames/db_queue_data.rds")

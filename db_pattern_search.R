@@ -18,10 +18,14 @@ library(viridis)
 
 ############################ Heatmap Plot ##############################
 # Change working directory - change appropriately to where rds files are
-setwd("../saved_data_frames")
+setwd("./saved_data_frames")
 
 # Read previously processed data
 df <- as.tibble(read_rds("db_all_data.rds"))
+
+# Filter unwanted data
+df <- df %>%
+  filter(Date >= "2016-10-14" & Date <= "2017-10-14")
 
 # Create levels for the times of the day
 time_lvl_df <- df %>%
@@ -47,25 +51,27 @@ break_labels <- str_extract(time_breaks, "\\d+:\\d+")
 ch_htmap <- df %>%
   filter(Number == 5) %>%
   mutate(    
-    Time = factor(Time, levels = time_lvls)
+    Time = factor(Time, levels = time_lvls),
+    available_bikes = Bike_stands - Available_stands
   ) %>%
   group_by(Time, Weekday) %>%
-  mutate(avg_stands = mean(Available_stands)) %>%
+  mutate(avg_bikes = mean(available_bikes)) %>%
   ggplot(aes(Time, Weekday)) +
-  geom_tile(aes(fill = avg_stands), height = 0.98) +
+  geom_tile(aes(fill = avg_bikes), height = 0.98) +
   scale_fill_viridis(
     option = "C",
-    name = "Free stands"
+    name = "Bikes available",
+    limits = c(0,40)
   ) +
   removeGrid()+
   scale_x_discrete(
     breaks = time_breaks,
     labels = break_labels
   ) + 
-  xlab("Hour of day") +
-  ylab("Day of the week") +
+  xlab("Hour") +
+  ylab("Day") +
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle("Mean available stands (Charlemont)")
+  ggtitle("Mean available bikes (Charlemont)")
 ch_htmap  
 
 # heatmap usage plot for all stations
