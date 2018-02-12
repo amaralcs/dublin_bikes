@@ -18,10 +18,14 @@ library(viridis)
 
 ############################ Heatmap Plot ##############################
 # Change working directory - change appropriately to where rds files are
-setwd("../saved_data_frames")
+setwd("./saved_data_frames")
 
 # Read previously processed data
 df <- as.tibble(read_rds("db_all_data.rds"))
+
+# Filter unwanted data
+df <- df %>%
+  filter(Date >= "2016-10-14" & Date <= "2017-10-14")
 
 # Create levels for the times of the day
 time_lvl_df <- df %>%
@@ -47,49 +51,57 @@ break_labels <- str_extract(time_breaks, "\\d+:\\d+")
 ch_htmap <- df %>%
   filter(Number == 5) %>%
   mutate(    
-    Time = factor(Time, levels = time_lvls)
+    Time = factor(Time, levels = time_lvls),
+    available_bikes = Bike_stands - Available_stands
   ) %>%
   group_by(Time, Weekday) %>%
-  mutate(avg_stands = mean(Available_stands)) %>%
+  mutate(
+    avg_bikes = mean(available_bikes),
+    bike_stands = max(Bike_stands)
+  ) %>%
   ggplot(aes(Time, Weekday)) +
-  geom_tile(aes(fill = avg_stands), height = 0.98) +
+  geom_tile(aes(fill = avg_bikes), height = 0.98) +
   scale_fill_viridis(
     option = "C",
-    name = "Free stands"
+    name = "Bikes available",
+    limits = c(0,40)
   ) +
   removeGrid()+
   scale_x_discrete(
     breaks = time_breaks,
     labels = break_labels
   ) + 
-  xlab("Hour of day") +
-  ylab("Day of the week") +
+  xlab("Hour") +
+  ylab("Day") +
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle("Mean available stands (Charlemont)")
+  ggtitle("Mean available bikes (Charlemont)")
 ch_htmap  
 
 # heatmap usage plot for all stations
 all_htmap <- df %>%
   mutate(    
-    Time = factor(Time, levels = time_lvls)
+    Time = factor(Time, levels = time_lvls),
+    available_bikes = Bike_stands - Available_stands
   ) %>%
   group_by(Time, Weekday) %>%
-  mutate(avg_stands = mean(Available_stands)) %>%
+  mutate(avg_bikes = mean(available_bikes)) %>%
   ggplot(aes(Time, Weekday)) +
-  geom_tile(aes(fill = avg_stands), height = 0.98) +
+  geom_tile(aes(fill = avg_bikes), height = 0.98) +
   scale_fill_viridis(
     option = "C",
-    name = "Free stands"
+    name = "Bikes available",
+    limits = c(0,40)
   ) +
   removeGrid()+
   scale_x_discrete(
     breaks = time_breaks,
     labels = break_labels
   ) + 
-  xlab("Hour of day") +
-  ylab("Day of the week") +
+  xlab("Hour") +
+  ylab("Day") +
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle("Mean available stands (all stations)")
+  ggtitle("Mean available bikes (all stations)")
+all_htmap
 
 setwd("../plots/heatmaps")
 ggsave("heatmap_charlemont.png", ch_htmap)
@@ -104,38 +116,49 @@ stations <- df %>%
 stations <- stations$Number
 
 station_names<- df %>%
-  select(Name) %>%
+  filter(Address != "Chatham Street") %>% # Because station 1 is associated to two names, we have to remove one
+  select(Address, Bike_stands) %>%
   distinct()
-station_names <- station_names$Name
+
+
+station_size <- station_names$Bike_stands
+station_names <- station_names$Address
 
 # Plot a heatmap for each station
 for(i in 1:length(stations)){
   the_number <- i
   the_name <- station_names[i]
+  size <- station_size[i]
     
   htmap <- df %>%
     filter(Number == i) %>%
     mutate(    
-      Time = factor(Time, levels = time_lvls)
+      Time = factor(Time, levels = time_lvls),
+      available_bikes = Bike_stands - Available_stands
     ) %>%
-    group_by(Time, Weekday, Name) %>%
-    mutate(avg_stands = mean(Available_stands)) %>%
+    group_by(Time, Weekday) %>%
+    mutate(
+      avg_bikes = mean(available_bikes),
+      stands = max(Bike_stands)
+    ) %>%
     ggplot(aes(Time, Weekday)) +
-    geom_tile(aes(fill = avg_stands), height = 0.98) +
+    geom_tile(aes(fill = avg_bikes), height = 0.98) +
     scale_fill_viridis(
       option = "C",
-      name = "Free stands"
+      name = "Bikes available",
+      limits = c(0,40)
     ) +
     removeGrid()+
     scale_x_discrete(
       breaks = time_breaks,
       labels = break_labels
     ) + 
-    xlab("Hour of day") +
-    ylab("Day of the week") +
-    theme(axis.text.x = element_text(angle = 90)) +
-    ggtitle(paste("Mean available stands (", the_name, ")") )
-  
-  ggsave(paste("heatmap_", the_number, ".png"), htmap)
+    xlab("Hour") +
+    ylab("Day") +
+    theme(axis.text.x = element_text(angle = 90))+
+    ggtitle(paste("Mean available bikes - ", the_name, sep = ""),
+            subtitle = paste("Station size: ", size, sep = ""))
+  htmap
+  ggsave(paste(the_number, "_htmp", ".png", sep = ""), htmap)
 }
   
