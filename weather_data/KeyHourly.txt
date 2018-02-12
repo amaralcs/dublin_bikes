@@ -1,0 +1,235 @@
+﻿Hourly Elements:
+
+ID	        ELEMENT                                                        Unit       
+
+rain		Precipitation Amount						mm
+temp       	Air Temperature 	                                        °C
+wetb		Wet Bulb Air Temperature			                °C
+dewpt		Dew Point Air Temperature					°C		                 
+vappr		Vapour Pressure							hpa
+rhum		Relative Humidity						%
+msl		Mean Sea Level Pressure						hPa
+wdsp		Mean Hourly Wind Speed						kt
+wddir		Predominant Hourly wind Direction				kt
+ww		Synop Code Present Weather - decode below
+w		Synop Code Past Weather - decode below
+sun		Sunshine duration						hours
+vis		Visibility							m
+clht		Cloud Ceiling Height - if none value is 999			100s feet
+clamt		Cloud Amount							okta
+
+
+Indicators (i)	    Description  - Decode                                                        
+
+irain		Rainfall Indicators:		0. satisfactory. 
+				        	1. deposition. 
+				        	2. trace or sum of precipition. 
+				        	3. trace or sum of deposition. 
+						4. estimate precipitation. 
+				      		5 estimate deposition. 
+						6. estimate trace of precipitation.
+
+itemp		Temperature Indicators: 	0. positive. 
+						1. negative. 
+						2. positive estimated. 	
+						3. negative estimated. 
+						4. not available. 
+
+iwb  		Wet Bulb Indicators:    	0:positive. 
+						1. negative. 
+						2. positive estimated. 
+						3. negative estimated. 
+				        	4. not available. 
+						5. frozen negative.
+
+iwdsp		Wind Speed Indicators:		2. Over 60 minutes. 
+						4. Over 60 minutes and defective
+						6 Over 60 minutes and partially defective. 
+						7. n/a
+
+iwddir		Wind Direction Indicators:  	2. Over 60 minutes. 
+						4. Over 60 minutes and defective
+						6 Over 60 minutes and partially defective. 
+						7. n/a
+
+
+
+WW  Code:     
+
+Present
+Weather                Weather at time of observation.
+
+                 Decode - SYNOP - ww in group 7wwW1W2
+
+WW=00-19     No precipitation, fog,(except for 11 and 12), duststorm,  sandstorm, drifting or blowing snow at the
+             station at the time of observation  or, except for 09 and 17, during the preceeding hour
+
+      00     Cloud development not observed or observable }characteristic
+      01     Clouds dissolving or becoming less developed }state of sky
+      02     State of sky on the whole unchanged          }during the
+      03     Clouds generally forming or developing       }past hour
+      04     Visibility reduced by smoke haze                     
+      05     Haze
+      06     Widespread dust in suspension in the air, not raised by wind at or near the station at the time of observation.
+      07     Dust or sand raised by the wind at or near the station at the time of the observation, but no well-developed dust whirl(s), and no sandstorm seen: or, in the case of ships, blowing spray at the station                      
+      08     Well developed dust whirl(s) or sand whirl(s) seen at or near the station during the preceding hour or at the time of observation, but no duststorm or sandstorm.                      
+      09     Duststorm or sandstorm within sight at the time of observation, or at the station during the preceding hour                        
+      10     Mist                             
+      11     Patches of              } shallow fog or ice fog
+      12     More or less continuous } less than 2 m on land or 10 m at sea 
+      13     Lightning visible, no thunder heard
+      14     Precipitation within sight, not reaching the ground or surface of sea
+      15     Precipitation within sight, reaching ground or the surface of the sea, but distant, i.e. estimated to
+               be more than 5 km from the station
+      16     Precipitation within sight, reaching the ground or the surface of the sea, near to, but not at the station                 
+      17     Thunderstorm, but no precipitation at the time of observation
+      18     Squalls                  } at or within sight of
+                                      ) the station during
+      19     Funnel cloud(s) during  the preceding hour or at time of observation
+
+WW=20-29     Precipitation, fog, ice fog or thunderstorm at the station during the preceeding hour but not at the time 
+                         observation
+      20     Drizzle (not freezing) or snow grains }               
+      21     Rain (not freezing)                }  Not
+      22     Snow                               }  falling
+      23     Rain and snow or ice pellets       }  as shower(s)
+      24     Freezing drizzle or freezing rain  }
+      25     Shower(s) of rain
+      26     Shower(s) of snow, or of rain and snow
+      27     Shower(s) of hail, or of rain and hail
+      28     Fog or ice fog
+      29     Thunderstorm (with or without precipitation)
+
+
+
+WW=30-39     Duststorm, sandstorm, drifting or blowing snow
+
+      30     Slight or          } has decreased during the preceding hour
+      31     moderate duststorm  }no appreciable change during the preceding hour
+      32     or sandstorm       } has begun or increased during the preceding hour
+      33     Severe             } has decreased during the preceding hour
+      34     duststorm          } no appreciable change during the preceding hour
+      35     or sandstorm       } has begun or increased during the preceding hour
+      36     Slight or moderate drifting snow }  Generally low
+      37     Heavy drifting snow   }  (below eye level)
+      38     Slight or moderate blowing snow }  Generally high
+      39     Heavy blowing snow   }  (above eye level)            
+
+
+WW=40-49     Fog or ice fog at the time of observation
+
+      40     Fog or ice fog at a distance at the time of observation, but not at the station during the preceding hour,the fog or ice fog extending to a level above that of the observer
+      41     Fog or ice fog in patches                            
+      42     Fog or ice fog, sky visible   }  has become thinner during                                               
+      43     Fog or ice fog, sky obscured  }  preceding hour       
+      44     Fog or ice fog, sky visible   }  no appreciable change                                               
+      45     Fog or ice fog, sky obscured  }  during the preceding hour                                       
+      46     Fog or ice fog, sky visible   }  has begun or has become thicker                                       
+      47     Fog or ice fog, sky obscured  }  during the preceding hour                                       
+      48     Fog or ice fog, sky visible                          
+      49     Fog or ice fog, sky obscured    
+                     
+
+WW=50-59     Drizzle
+
+      50     Drizzle, not freezing, intermittent }  slight at time                                                 
+      51     Drizzle, not freezing, continuous   }  of observation  
+      52     Drizzle, not freezing, intermittent }  moderate at time                                                 
+      53     Drizzle, not freezing, continuous   }  of observation                                          
+      54     Drizzle, not freezing, intermittent }  heavy (dense) at time                                      
+      55     Drizzle, not freezing, continuous   }  of observation  
+      56     Drizzle, freezing, slight                            
+      57     Drizzle, freezing, moderate or heavy (dense)         
+      58     Drizzle and rain, slight                             
+      59     Drizzle and rain, moderate or heavy          
+        
+
+WW=60-69     Rain
+
+      60     Rain, not freezing, intermittent   }  Slight at time   
+      61     Rain, not freezing, continuous     }  of observation     
+      62     Rain, not freezing, intermittent   }  Moderate at time                                                 
+      63     Rain, not freezing, continuous     }  of observation    
+      64     Rain, not freezing, intermittent   }  Heavy at time    
+      65     Rain, not freezing, continuous     }  of observation     
+      66     Rain, freezing, slight                               
+      67     Rain, freezing, moderate or heavy                    
+      68     Rain or drizzle and snow, slight                     
+      69     Rain or drizzle and snow, moderate or heavy        
+  
+
+WW=70-79     Solid precipitation not in showers
+
+      70     Intermittent fall of snowflakes    }  slight at time    
+      71     Continuous fall of snowflakes      }  of observation      
+      72     Intermittent fall of snowflakes    }  moderate at time                                                 
+      73     Continuous fall of snowflakes      }  of observation     
+      74     Intermittent fall of snowflakes    }  heavy at time     
+      75     Continuous fall of snowflakes      }  of observation      
+      76     Diamond dust (with or without fog)                   
+      77     Snow grains (with or without fog)                    
+      78     Isolated star-like snow crystals (with or without fog)                                                 
+      79     Ice pellets                                          
+
+
+WW=80-99     Showery precipitation, or precipitation with current or recent thunderstorm
+
+      80     Rain shower(s), slight                               
+      81     Rain shower(s), moderate or heavy
+      82     Rain shower(s), violent
+      83     Shower(s) of rain and snow mixed, slight
+      84     Shower(s) of rain and snow mixed, moderate or heavy  
+      85     Snow shower(s), slight                               
+      86     Snow shower(s), moderate or heavy                    
+      87     Shower(s) of snow pellets or small hail            }- slight  
+      88      with or without rain or rain and snow mixed      }- moderate or heavy
+      89     Shower(s) of hail, with or without rain or         }- slight     
+      90       rain and snow mixed, not associated with thunder }- moderate or heavy
+
+
+WW=91-94     Thunderstorm during the preceeding hour but not at time of observation
+
+      91     Slight rain at time of observation
+      92     Moderate or heavy rain at time of observation
+      93     Slight snow, or rain and snow mixed, or hail2 at time of observation
+      94     Moderate or heavy snow, or rain and snow mixed, or hail1
+               at time of observation
+
+WW=95-99    Thunderstorm at time of observation
+
+      95     Thunderstorm, slight or moderate, without hail2 but with rain and or snow at time of observation
+      96     Thunderstorm, slight or moderate, with hail2 at time of observation
+      97     Thunderstorm, heavy, without hail2 but with rain and or snow at time of observation
+      98     Thunderstorm combined with dust storm or sandstorm at time of observation
+      99     Thunderstorm, heavy, with hail2 at time of observation
+
+* The expression at the station refers to a land station or a ship             
+
+1 Tornado cloud or waterspout                                                  
+2 Hail, small hail, snow pellets                                               
+
+
+
+
+
+
+W - Code:     
+
+Past Weather                         Weather during past hour  
+                                     Decode - SYNOP – W1,W2 in group 7wwW1W2                   
+Code figure
+
+0 Cloud covering 1/2 or less of the sky throughout the appropriate period
+1 Cloud covering more than 1/2 of the sky during part of the appropriate period and covering 1/2 or less during part of the period.
+2 Cloud covering more than 1/2 of the sky throughout the appropriate period
+3 Sandstorm, duststorm or blowing snow
+4 Fog or ice fog or thick haze
+5 Drizzle
+6 Rain
+7 Snow, or rain and snow mixed
+8 Shower(s)
+9 Thunderstorm(s) with or without precipitation
+
+
+
+

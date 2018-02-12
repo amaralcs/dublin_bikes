@@ -1,0 +1,45 @@
+stno:		Station Number
+year:
+month:
+day:
+hour:
+minute:
+date:		UTC
+ispeed:		Indicator for wind speed (0 OK, 1, 2 estimate, 4 rejected (value should be null))
+speed:		Wind speed (knots)
+idir:		Indicator for Wind direction(see ispeed)
+dir:		Wind direction (degrees)
+imaxgust:	Indicator for Max instantaneous wind speed (see ispeed)
+maxgust:	Max instantaneous wind speed (knots)
+idirmgust:	Indicator for directionat time of max instantaneous wind speed (see ispeed)
+dirmgust:	direction at time of maxinstantaneous wind speed (degrees)
+itimemgust:	Indicator for time ofmax instantaneous wind speed (see ispeed)
+timemgust:	Time of max instantaneous wind speed (seconds)
+iminspeed:	Indicator for Min instantaneous wind speed (see ispeed)
+minspeed:	Min instantaneous wind speed (knots)
+ispeedstdev:	Indicator for Standard deviation of wind speed (see ispeed)
+speedstdev:	Standard deviation ofwind speed
+idrybulb:	Indicator for drybulb temperature (see ispeed)
+drybulb:	drybulb temperature (degrees Celsius)
+igrasstemp:	Indicator for grass temperature (see ispeed)
+grasstemp:	grass temperature (degrees Celsius)
+it5cm:		Indicator for 5cm soil temperature (see ispeed)
+t5cm:		5cm soil temperature (degrees Celsius)
+it10cm:		Indicator for 10cm soil temperature (see ispeed)
+t10cm:		10cm soil temperature (degrees Celsius)
+it20cm:		Indicator for 20cm soil temperature (see ispeed)
+t20cm:		20cm soil temperature (degrees Celsius)
+it30cm:		Indicator for 30cm earthtemperature(see ispeed)
+t30cm:		30cm earth temperature (degrees Celsius)
+it50cm:		Indicator for 50cm earth temperature (see ispeed)
+t50cm:		50cm earth temperature (degrees Celsius)
+it100cm:	Indicator for 100cm earthtemperature (see ispeed)
+t100cm:		100cm earth temperature (degrees Celsius)
+irelhum:	Indicator for relative humidity (see ispeed)
+relhum:		relative humidity (percent)
+icbl:		Indicator for CBL pressure (see ispeed)
+cbl:		CBL pressure (hPa)
+isoltot:	Indicator for Solar radiation (see ispeed)
+soltot:		Solar radiation (J/cm2)
+irain:		Indicator for rainfall (seeispeed)
+rain:		rainfall (mm)

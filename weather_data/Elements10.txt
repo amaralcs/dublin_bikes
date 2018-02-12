@@ -1,0 +1,67 @@
+stno:		Station number
+year:	
+month:
+day:
+hour:
+minute:
+date:		UTC
+imaxrdry:	Indicator for Max drybulb temperature (0 OK, 1, 2  estimate, 4 rejected (value should be null))
+maxdry:		Max drybulb temperature (degrees Celsius)
+imindry:	Indicator for Min drybulb temperature (see imaxdry)
+mindry:		Min drybulb temperature (degrees Celsius)
+istddry:	Indicator for Standard deviation of drybulb temperature (see imaxdry)
+stdddry:	Standard deviation of drybulb temperature
+imaxgrass:	Indicator for Max grass temperature (see imaxdry)
+maxgrass:	Max grass temperature (degrees Celsius)
+imingrass:	Indicator for Min grass temperature (see imaxdry)
+mingrass:	Min grass temperature (degrees Celsius)
+istdgrass:	Indicator for Standarddeviation of grass temperature (see imaxdry)
+stdgrass:	Standard deviation of grass temperature
+imaxsoil5:	Indicator for Max 5cmsoil temperature (see imaxdry)
+maxsoil5:	Max 5cm soil temperature (degrees Celsius)
+iminsoil5:	Indicator for Min 5cmsoil temperature (see imaxdry)
+minsoil5:	Min 5cm soil temperature (degrees Celsius)
+istdsoil5:	Indicator for Standarddeviation of 5cm soil temperature (see imaxdry)
+stdsoil5:	Standard deviation of 5cm soil temperature
+imaxsoil10:	Indicator for Max 10cm soil temperature (see imaxdry)
+maxsoil10:	Max 10cm soil temperature (degrees Celsius)
+iminsoil10:	Indicator for Min 10cm soil temperature (see imaxdry)
+minsoil10:	Min 10cm soil temperature (degrees Celsius)
+istdsoil10:	Indicator for Standard deviation of 10cm soil temperature (see imaxdry)
+stdsoil10:	Standard deviation of10cm soil temperature
+imaxsoil20:	Indicator for Max 20cm soil temperature (see imaxdry)
+maxsoil20:	Max 20cm soil temperature (degrees Celsius)
+iminsoil20:	Indicator for Min 20cm soil temperature (see imaxdry)
+minsoil20:	Min 20cm soil temperature (degrees Celsius)
+istdsoil20:	Indicator for Standard deviation of 20cm soil temperature (see imaxdry)
+stdsoil20:	Standard deviation of20cm soil temperature
+imaxearth30:	Indicator for Max 30cm earth temperature (see imaxdry)
+maxearth30:	Max 30cm earth temperature (degrees Celsius)
+iminearth30:	Indicator for Min 30cm earth temperature (see imaxdry)
+minearth30:	Min 30cm earth temperature (degrees Celsius)
+istdearth30:	Indicator for Standard deviation of 30cm earth temperature (see imaxdry)
+stdearth30:	Standard deviation of30cm earth temperature
+imaxearth50:	Indicator for Max 50cm earth temperature (see imaxdry)
+maxearth50:	Max 50cm earth temperature (degrees Celsius)
+iminearth50:	Indicator for Min 50cm earth temperature (see imaxdry)
+minearth50:	Min 50cm earth temperature (degrees Celsius)
+istdearth50:	Indicator for Standard deviation of 50cm earth temperature (see imaxdry)
+stdearth50:	Standard deviation of50cm earth temperature
+imaxearth100:	Indicator for Max 100cm earth temperature (see imaxdry)
+maxearth100:	Max 100cm earth temperature (degrees Celsius)
+iminearth100:	Indicator for Min 100cm earth temperature (see imaxdry)
+minearth100:	Min 100cm earth temperature (degrees Celsius)
+istdearth100:	Indicator for Standard deviation of 100cm earth temperature (see imaxdry)
+stdearth100:	Standard deviation of 100cm earth temperature
+imaxhum:	Indicator for Max relative humidity (see imaxdry)
+maxhum:		Max relative humidity (percent)
+iminhum:	Indicator for Min relative humidity (see imaxdry)
+minhum:		Min relative humidity (percent)
+istdhum:	Indicator for Standard deviation of relative humidity (see imaxdry)
+stdhum:		Standard deviation of relative humidity
+imaxbaro:	Indicator for Max CBL pressure (see imaxdry)
+maxbaro:	Max CBL pressure (hPa)
+iminbaro:	Indicator for Min CBLpressure(see imaxdry)
+minbaro:	Min CBL pressure (hPa)
+istdbaro:	Indicator for Standarddeviation of CBL pressure(see imaxdry)
+stdbaro:	Standard deviation of CBL pressure
