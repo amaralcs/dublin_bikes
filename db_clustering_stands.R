@@ -131,6 +131,7 @@ all_centroid_plot <- k_centers %>%
   )
 
 all_centroid_plot
+
 ggsave("plots/clustering/Clustering for all stations.png", all_centroid_plot)
 
 ########################## Comparison between Weekday / Weekend ####################
@@ -456,29 +457,30 @@ for(i in 1:102){
 
 cdf <- cluster_df %>%
   group_by(Number, Name, cluster) %>%
-  summarise()
+  summarise() %>% ungroup()
 write_rds(cdf, "./saved_data_frames/db_clustered_stations.rds")
 
-c1 <- cluster_df %>%
-  filter( cluster == "c 1") %>%
+cdf <- read_rds("./saved_data_frames/db_clustered_stations.rds")
+c1 <- cdf %>%
+  filter( cluster == 1) %>%
   group_by(Number, Name) %>%
   summarise() %>% ungroup()
 write_csv(c1, "./plots/clustering/cluster1.csv")
 
-c2 <- cluster_df %>%
-  filter( cluster == "c 2") %>%
+c2 <- cdf %>%
+  filter( cluster == 2) %>%
   group_by(Number, Name) %>%
   summarise() %>% ungroup()
 write_csv(c2, "./plots/clustering/cluster2.csv")
 
-c3 <- cluster_df %>%
-  filter( cluster == "c 3") %>%
+c3 <- cdf %>%
+  filter( cluster == 3) %>%
   group_by(Number, Name) %>%
   summarise() %>% ungroup()
 write_csv(c3, "./plots/clustering/cluster3.csv")
 
-c4 <- cluster_df %>%
-  filter( cluster == "c 4") %>%
+c4 <- cdf %>%
+  filter( cluster == 4) %>%
   group_by(Number, Name) %>%
   summarise() %>% ungroup()
 write_csv(c4, "./plots/clustering/cluster4.csv")
@@ -527,3 +529,55 @@ cluster_plot <- dub_map +
   )
 cluster_plot
 ggsave("plots/clustering/map_clusters.png", cluster_plot)
+
+########################## Plots for each station in the cluster
+cdf <- read_rds("./saved_data_frames/db_clustered_stations.rds")
+
+# Join clusters to data frame
+all_df <- df %>%
+  filter(Name != "CHATHAM STREET") %>% # Station 1 is problematic, has two names attached to it
+  left_join(cdf) 
+
+all_df %>%
+  mutate( 
+    Time = str_replace_all(Time, "_", ":"),
+    Time = factor(Time, levels = time_lvls)
+  ) %>%
+  group_by(Number, Name, Address, Time, cluster) %>%
+  summarise(
+    av_stands = mean(Available_stands)
+  ) %>%
+  ggplot(aes(Time, av_stands, group = Name, colour = Name)) +
+  geom_line() +
+  scale_x_discrete(
+    breaks = time_breaks,
+    labels = break_labels
+  ) + 
+  xlab("Hour of day") +
+  ylab("Available stands") +
+  facet_wrap(~ cluster) +
+  theme(
+    legend.position = "none"
+  )
+
+all_df %>%
+  mutate( 
+    Time = str_replace_all(Time, "_", ":"),
+    Time = factor(Time, levels = time_lvls)
+  ) %>%
+  group_by(Time, cluster) %>%
+  summarise(
+    av_stands = mean(Available_stands)
+  ) %>%
+  ggplot(aes(Time, av_stands,group = cluster, colour = cluster)) +
+  geom_line() +
+  scale_x_discrete(
+    breaks = time_breaks,
+    labels = break_labels
+  ) + 
+  xlab("Hour of day") +
+  ylab("Available stands") +
+  facet_wrap(~ cluster) +
+  theme(
+    legend.position = "none"
+  )

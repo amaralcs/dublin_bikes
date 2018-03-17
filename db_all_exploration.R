@@ -1,7 +1,7 @@
 "
   Author: Carlos Amaral
   Date: 4/10/17
-  Last modified:17/11/17
+  Last modified: 17/03/17
   Description: 
     Initial exploration of the dataset. 
     There is analysis on the days the data was collected (note the missing days),
@@ -9,11 +9,13 @@
     Comparison between Charlemont (top station overall) and Mountjoy Square (top station on the
     north side of the city)
     Analysis of usage of least used 10 stations
+    Investigates seasonality on usage of bikes.
 "
 
 library(tidyverse)
 library(lubridate)
 library(stringr)
+library(ggmap)
 
 ################################# Exploratory Analysis #####################################
 
@@ -34,10 +36,27 @@ df %>%
 
 # Filter out data for top 10 most used stations
 top_check_ins <- df %>%
-  group_by(Number, Name) %>%
+  group_by(Name) %>%
   summarise(tot_check_in = sum(Check_in)) %>%
   top_n(10, tot_check_in)
+top_check_ins
 # Note how there are two stations with number = 1 and no station 50
+
+# Filter out data for top 10 most and least used stations
+top_activity <- df %>%
+  mutate(act = Check_in + Check_out) %>%
+  group_by(Address) %>%
+  summarise(tot_act = sum(act)) %>%
+  top_n(10, tot_act)
+top_activity
+
+bot_activity <- df %>%
+  mutate(act = Check_in + Check_out) %>%
+  group_by(Address) %>%
+  summarise(tot_act = sum(act)) %>%
+  top_n(-10, tot_act)
+bot_activity
+
 
 df %>%
   group_by(Name) %>%
@@ -46,16 +65,17 @@ df %>%
   View()
 
 # Semi-join to obtain the full data
-top_check_ins <- semi_join(df, top_check_ins, by = "Number")
+top_check_ins <- semi_join(df, top_check_ins, by = "Name")
 
 # Filter out data for top 10 most used stations
 top_check_outs <- df %>%
-  group_by(Number) %>%
+  group_by(Name) %>%
   summarise(tot_check_out = sum(Check_out)) %>%
   top_n(10, tot_check_out)
+top_check_outs
 
 # Semi-join to obtain the full data
-top_check_outs <- semi_join(df, top_check_outs, by = "Number")
+top_check_outs <- semi_join(df, top_check_outs, by = "Name")
 
 # Average Usage per day
 avg_usage_day <- df %>%
@@ -65,13 +85,27 @@ avg_usage_day <- df %>%
     avg_cout = mean(Check_out)
   )
 
+# Usage per day
+usage_day <- df %>%
+  mutate( act = Check_in + Check_out) %>%
+  group_by(Number, Name, Weekday) %>%
+  summarise(
+    tot_act = sum(act)
+  )
+
 # Boxplots to understand the avg distribution
 avg_usage_day %>%
   ggplot(aes(Weekday, avg_cin)) +
   geom_boxplot()
+
 avg_usage_day %>%
   ggplot(aes(Weekday, avg_cout)) +
   geom_boxplot()
+
+usage_day %>%
+  ggplot(aes(Weekday, tot_act)) +
+  geom_boxplot() +
+  ylab("Activity")
 
 # Examine usage in 4 periods, morning, afternoon, evening , night
 day_periods <- df %>%
@@ -391,75 +425,82 @@ ggsave("mjoy_charlemont_sat_sun.png", sat_sun, width = 30, units = "cm")
  while Charlemont has busier peaks.
  On the check in side, the same pattern appears with charlemont having more check ins at peak
  times."
-################################# Plots for all data ####################################
+################################# Locations of top/bottom stations ####################################
+# Data frame with stations of interest (i.e busiest and least busy)
+act_df <- df %>%
+  inner_join(rbind(top_activity, bot_activity), by = "Address") %>%
+  group_by(Number, Address, tot_act) %>%
+  summarise() %>%
+  ungroup() %>%
+  mutate(
+    rank = if_else(tot_act > 50000, "Most Active", "Least Active")
+  )
 
-# Top 10 stations
-top_check_ins <- df %>%
-  group_by(Number) %>%
-  summarise(tot_check_in = sum(Check_in)) %>%
-  top_n(10, tot_check_in)
+geo_df <- read_csv("./geo_data/db_geo.csv")
+act_df <- act_df %>%
+  left_join(geo_df)
 
-# Full data for top 10 stations
-top_10_df <- df %>%
-  semi_join(top_check_ins, by = "Number")
+dub_map <- ggmap(
+  get_googlemap(
+    center = c(-6.270,53.345),
+    scale = 2,
+    zoom = 13,
+    size = c(540,400)
+  )
+) +
+  coord_fixed(ratio = 1.3)
 
-# distribution of check ins across top 10 stations
-top_10_df %>% 
-  group_by(Name, Number) %>%
-  ggplot(aes(as.character(Number), Check_in, fill = Name)) +
-  geom_boxplot() +
-  theme(legend.position = "none") +
-  ylab("Check in distribution") +
-  xlab("Station") +
-  ggtitle("Overall check in comparison") 
+top_bot_act <- dub_map +
+  geom_point(
+    data = act_df,
+    aes(Longitude, Latitude, colour = rank),
+    size = 5,
+    alpha = 0.8
+  ) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        legend.position = "bottom"
+  ) +
+  scale_colour_manual(
+    breaks = rank,
+    values = c("#FF0000", "#3399FF")
+  )
+ggsave("./plots/geoplots/top_bottom_activity.png", top_bot_act)
 
-# distribution of check outs across top 10 stations
-top_10_df %>% 
-  group_by(Name, Number) %>%
-  ggplot(aes(as.character(Number), Check_out, fill = Name)) +
-  geom_boxplot() +
-  theme(legend.position = "none") +
-  ylab("Check out distribution") +
-  xlab("Station") +
-  ggtitle("Overall check out comparison") 
+################################# Seasonality effects ###########################
+library(reshape)
+# Investigate wheter seasonality has any effect on usage
+season_df <- df %>%
+  filter(Date >= "2016-10-14" & Date <= "2017-10-14") %>%
+  #filter(Number == 5) %>%
+  mutate(
+    season = factor(
+      if_else(month(Date) == 11 |month(Date) == 12 | month(Date) == 1, "Winter",
+              if_else(month(Date) == 2 |month(Date) == 3 | month(Date) == 4, "Spring",
+                      if_else(month(Date) == 5 |month(Date) == 6 |month(Date) == 7, "Summer",
+                              "Autumn"))),
+      levels = c("Winter", "Spring", "Summer", "Autumn") 
+    ),
+    activity = Check_in + Check_out
+  ) %>%
+  select(Weekday, season, activity) %>%
+  melt(id = c("Weekday", "season")) %>%
+  group_by(Weekday, season) %>%
+  summarise( 
+    activity = sum(value)
+  ) %>%
+  ungroup()
 
-# Least 10 stations
-least_10_in <- df %>%
-  group_by(Number) %>%
-  summarise(tot_check_in = sum(Check_in)) %>%
-  top_n(-10, tot_check_in)
-
-least_10_out <- df %>%
-  group_by(Number) %>%
-  summarise(tot_check_out = sum(Check_out)) %>%
-  top_n(-10, tot_check_out)
-
-" Just like for the top 10 check ins/outs, the least 10 check in stations are the least 10
-  check out stations"
-
-# get full dataset for least 10 used
-least_10_df <- df %>%
-  semi_join(least_10_in, by = "Number")
-
-# distribution of check ins across least 10 stations
-least_10_df %>% 
-  group_by(Name, Number) %>%
-  ggplot(aes(as.character(Number), Check_in, fill = Name)) +
-  geom_boxplot() +
-  theme(legend.position = "none") +
-  ylab("Check in distribution") +
-  xlab("Station") +
-  ggtitle("Overall check in comparison") 
-
-# distribution of check outs across least 10 stations
-least_10_df %>% 
-  group_by(Name, Number) %>%
-  ggplot(aes(as.character(Number), Check_out, fill = Name)) +
-  geom_boxplot() +
-  theme(legend.position = "none") +
-  ylab("Check out distribution") +
-  xlab("Station") +
-  ggtitle("Overall check out comparison") 
+season_plot <- season_df %>%
+  ggplot(aes(season, activity, fill=season)) +
+  geom_col() +
+  facet_wrap(~ Weekday, nrow = 2) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
   
-least_10_df %>%
-  group_by(Number, Name) %>% distinct(Name)
+season_plot
+
+ggsave("./plots/season_lplot.png", season_plot)

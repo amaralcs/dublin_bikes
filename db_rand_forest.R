@@ -54,7 +54,7 @@ bot_stations <- all_clust %>%
 selected <- rbind(top_stations, bot_stations) %>%
   pull(Number)
 
-# Randomly select some other 2 stations in each cluster for the random forest modelling
+# Randomly select some other 3 stations in each cluster for the random forest modelling
 for(clust_num in 1:4){
   n <- all_clust %>%
     filter(cluster == clust_num) %>%
@@ -137,13 +137,13 @@ rf_df <- time_df %>%
 # 
 # # Matrix with numerical variables to evaluate correlations
 # num_matrix <- wrf_df %>%
-#   select(av_stands,Bike_stands, Latitude, Longitude, prev_stands, rain, temp, wetb, dewpt, vappr, rhum, msl)
+#   select(av_bikes, rain, temp, wetb, dewpt, vappr, rhum, msl)
 # 
 # summary(num_matrix)
 # cor(num_matrix) %>% View()
-# corrplot(cor(num_matrix), method = "circle")
-"There does not seem to be much correlation, between the weather variables and av_stands
- So for performance, I might as well not include them"
+# corrplot(cor(num_matrix), type= "upper",  method = "square")
+# "There does not seem to be much correlation, between the weather variables and av_stands
+#  So for performance, I might as well not include them"
 ####################### Random forest model #############################
 
 # Create training and test samples
@@ -222,17 +222,19 @@ base_plot <- test %>%
   ) +
   facet_wrap(~ Address) +
   theme(
-    legend.box.background = element_rect()
+    legend.box.background = element_rect(),
+    legend.position = "bottom"
   )
 base_plot
 
 # Pull the station names as a factor level and create a label df for the annotation
 ann_levels <- test %>% group_by(Address) %>% summarise() %>% pull(Address) %>% as.factor()
 ann_text <- tibble(Time = "09:00", mean_av_bikes = 33, 
-                   Address = factor("Convention Centre", levels = ann_levels))
+                   Address = factor("Royal Hospital", levels = ann_levels))
 test_set_mean_pred <- base_plot + 
   geom_label(data = ann_text, label = err_label, size = 4)
-  
+test_set_mean_pred
+
 ggsave("./plots/predictions/test_mean_prediction.png", test_set_mean_pred)
 
 ####################################################################################
@@ -284,7 +286,7 @@ ggsave("/plot/predictions/mean_day_pred_houston.png", wk_mean_pred)
 ######################################################################
 # Filter data for the last week available and see how the prediction fares
 unseen_all <- read_rds("./saved_data_frames/db_all_data.rds") %>%
-  filter(Date >= "2017-11-07") 
+  filter(Date >= "2017-11-06" & Date < "2017-11-13") 
 
 clusters <- read_rds("./saved_data_frames/db_clustered_stations.rds")
 uns_clust <- unseen_all %>%
@@ -346,11 +348,24 @@ uns_rf <- unseen_time %>%
 
 rf <- read_rds("./saved_data_frames/rf_model.rds")
 
+# Predict and calculate error
 uns_rf$pred <- predict(rf, uns_rf)
-uns_err <- rmse(uns_rf$pred, uns_rf$av_bikes)
-
+uns_err <- rmse(uns_rf$av_bikes, uns_rf$pred)
 uns_rf$pred <- round(uns_rf$pred)
 
+# Seems there are negative values in the data, must've been a reading error
+uns_rf$av_bikes <- abs(uns_rf$av_bikes)
+rmsle(uns_rf$av_bikes, uns_rf$pred)
+
+# Examining Heuston
+# uns_rf %>%
+#   filter(
+#     Number == 93 | Number == 92 | Number == 94,
+#     Weekday == "Tue"
+#   ) %>%
+#   group_by(Address, cluster) %>% summarise() %>%
+#   View()
+################################ Plot for single week ################################
 time_breaks <- uns_rf %>%
   filter(str_detect(Time, "\\d{2}:00")) %>%
   group_by(Time) %>%
@@ -359,13 +374,13 @@ time_breaks <- uns_rf %>%
 
 uns_err_label <- paste("Error margin:", round(uns_err, 2))
 
-num <- 2
+num <- 5
 # plot means per stations
 for(num in 1:102){
   if(num == 20 | num == 50) num = num+1
   
   stat_name <- uns_rf %>% filter(Number == num) %>% group_by(Address) %>% summarise(addr = first(Address)) %>% pull(addr)
-  plot_title <- paste("Predictions for unseen data: ", stat_name, " week of 07/11/17", sep ="")
+  plot_title <- paste("Predictions for unseen data: ", stat_name, " week of 06/11/17", sep ="")
   
   # plot means per stations
   base <- uns_rf %>%
@@ -379,8 +394,8 @@ for(num in 1:102){
     ggplot(aes(Time, av_bikes, group = 1)) +
     theme_minimal() +
     geom_line(aes(y = Bike_stands, colour = "Total stands"), linetype = 6) +
-    geom_line(aes(colour = "Actual"), size = 1.1) +
-    geom_line(aes(y = pred, group = 1, colour = "Predicted"), size = 1.1) +
+    geom_line(aes(colour = "Actual"), size = 1) +
+    geom_line(aes(y = pred, group = 1, colour = "Predicted"), size = 1) +
     geom_ribbon(aes(ymin = pred - uns_err, ymax = pred + uns_err), fill = "grey30", alpha = 0.2) +
     theme(axis.text.x = element_text(angle = 90, size = 7)) + 
     scale_x_discrete(
@@ -395,7 +410,8 @@ for(num in 1:102){
     ) +
     facet_wrap(~ Weekday) +
     theme(
-      legend.box.background = element_rect()
+      legend.box.background = element_rect(),
+      legend.position = "bottom"
     )
   base
   
@@ -408,8 +424,65 @@ for(num in 1:102){
                         Weekday = factor("Sun", levels = wk_ann_levels))
   unseen_pred <- base + 
     geom_label(data = wk_ann_text, label = uns_err_label, size = 3)
+  unseen_pred
   
   fname <- paste("./plots/predictions/unseen/predict_", num, ".png", sep = "")
   ggsave(fname, unseen_pred)
 }
 " NOTE THERE'S AN ERROR WITH STATION 20, SEEMS LIKE THE GEOGRAPHICAL SET DOESN'T HAVE STATION 20 NOR 50"
+
+
+################################ Hourly bound plot #####################################
+hr_uns <- uns_rf %>%
+  filter(Weekday == "Mon" & Time == "08:00") %>%
+  filter(Number > 20 & Number < 50) %>%
+  mutate(
+    error = uns_err,
+    up_bound = pred + error,
+    low_bound = if_else(
+      pred - error < 0,
+      0,
+      pred - error
+    ),
+    acc_pred = if_else(
+      (av_bikes <= up_bound & av_bikes >= low_bound),
+      "Sufficient",
+      "Insufficient"
+    ),
+    st_range = if_else(Number <26, "1-25",
+                       if_else(Number <51, "26-50",
+                               if_else(Number < 76, "51-75",
+                                       "76-102"))),
+    st_range = as.factor(st_range)
+  )
+
+err_range_label <- paste("Error range: ", round(uns_err*2), " bikes", sep = "")
+
+hour_bound <- hr_uns %>%
+  group_by(Number) %>%
+  ggplot(aes(Number, av_bikes)) +
+  #geom_errorbar(aes(ymax = Bike_stands, ymin = 0), colour = "grey", linetype = 5, size = .8) +
+  geom_errorbar(aes(ymax= up_bound, ymin = low_bound), colour = "black", size = 1) +
+  geom_point(aes(shape = factor(acc_pred), colour = acc_pred), size = 3) +
+  theme_bw() +
+  scale_colour_manual("Starting Inventory", values = c("#D55E00", "#009E73"))+
+  theme(
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold", size = 10),
+    legend.text = element_text(size = 8),
+    #axis.text.x = element_blank(),
+    #axis.ticks.x = element_blank(),
+    axis.title = element_text(size = 15),
+    plot.title = element_text(size = 20)
+  ) +
+  xlab("Stations") +
+  ylim(0, 43) +
+  #xlim(0, 103) +
+  ylab("Inventory Bounds (bikes)") +
+  scale_shape_manual("Starting Inventory", values = c(17,16)) +
+  geom_label(x = 35, y = 42, label = err_range_label, size = 5) +
+  ggtitle("Prediction bounds for 8:00am, 6/11/17") 
+#guides(title = "Starting inventory")
+
+hour_bound
+ggsave("./plots/predictions/8am_bounds_subset.png", hour_bound) #, width = 30, height = 10, units = "in") 
