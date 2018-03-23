@@ -1,12 +1,12 @@
 " 
   Author: Carlos Amaral
-Date: 
-Last Modified: 09/01/18
-Description: 
-This uses k-means clustering to cluster the data based on the number of available stands
-at each station for each period of time. 
-The tricky part is to get the dataset into the desired format. In particular, the name of
-the columns at the desired format become the times of the day (i.e. 00:00:00, 00:10:00, etc..)
+  Date: 
+  Last Modified: 09/01/18
+  Description: 
+    This uses k-means clustering to cluster the data based on the number of available stands
+    at each station for each period of time. 
+    The tricky part is to get the dataset into the desired format. In particular, the name of
+    the columns at the desired format become the times of the day (i.e. 00:00:00, 00:10:00, etc..)
 "
 
 library(tidyverse)

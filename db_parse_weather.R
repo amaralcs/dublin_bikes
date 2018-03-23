@@ -1,3 +1,12 @@
+"
+  Author: Carlos Amaral
+  Date: 30/01/18
+  Last modified: 23/03/18
+  Description: 
+    Takes raw csv with weather data and modifies it so it is in an adequate format to
+    be evaluated in db_rand_forest
+"
+
 library(tidyverse)
 library(lubridate)
 
